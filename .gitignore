@@ -1,0 +1,48 @@
+# --- ROS 2 相关 ---
+install/
+build/
+log/
+
+# --- Python 相关 ---
+**/__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.tox/
+.nox/
+.coverage
+.cache
+nosetests.xml
+coverage.xml
+*.filenames
+*.log
+
+# --- 编译与链接库 (C++/CMake) ---
+*.so
+*.a
+*.o
+**/CMakeCache.txt
+**/CMakeFiles/
+**/cmake_install.cmake
+**/Makefile
+**/install_manifest.txt
+**/compile_commands.json
+
+# --- 编辑器与 IDE 相关 ---
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.clangd/
+
+# --- 操作系统相关 ---
+.DS_Store
+Thumbs.db
+
+# --- 局部环境与敏感信息 ---
+.env
+.venv
+env/
+venv/
+ENV/
