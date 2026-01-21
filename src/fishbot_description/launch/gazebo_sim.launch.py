@@ -1,14 +1,41 @@
+import os
 import launch
 import launch_ros
 from ament_index_python.packages import get_package_share_directory
 from launch.launch_description_sources import PythonLaunchDescriptionSource
+from launch.actions import SetEnvironmentVariable
+
+def generate_launch_description():
+    # ... 原有路径定义 ...
+    pkg_share = get_package_share_directory('fishbot_description')
+    
+    # 告诉 Gazebo 去哪里找你的 map_model
+    # 假设你的目录结构是 fishbot_description/world/map_model/
+    gazebo_model_path = os.path.join(pkg_share, 'world')
+    set_gazebo_model_path = SetEnvironmentVariable(
+        name='GAZEBO_MODEL_PATH', 
+        value=gazebo_model_path
+    )
+
+    # ... 
+    return launch.LaunchDescription([
+        set_gazebo_model_path, # 必须在加载 gazebo 动作之前
+        # ... 其他动作 ...
+    ])
 
 def generate_launch_description():
     # 获取默认路径
     robot_name_in_model = "fishbot"
     urdf_tutorial_path = get_package_share_directory('fishbot_description')
     default_model_path = urdf_tutorial_path + '/urdf/fishbot/fishbot.urdf.xacro'
-    default_world_path = urdf_tutorial_path + '/world/custom_room.world'
+    default_world_path = os.path.join(urdf_tutorial_path, 'world', 'room.world')
+    pkg_share = get_package_share_directory('fishbot_description')
+
+    gazebo_model_path = os.path.join(pkg_share, 'world')
+    set_gazebo_model_path = SetEnvironmentVariable(
+        name='GAZEBO_MODEL_PATH', 
+        value=gazebo_model_path
+    )
     # 为 Launch 声明参数
     action_declare_arg_mode_path = launch.actions.DeclareLaunchArgument(
         name='model', default_value=str(default_model_path),
@@ -55,7 +82,15 @@ def generate_launch_description():
         cmd=['ros2', 'control', 'load_controller', '--set-state', 'active','fishbot_diff_drive_controller'], 
         output='screen')
     
+    load_controllers_after_timeout = launch.actions.TimerAction(
+        period=5.0,  # 延时 5 秒，给 Gazebo 插件留出初始化时间
+        actions=[
+            load_joint_state_controller,
+            load_fishbot_diff_drive_controller
+        ]
+    )
     return launch.LaunchDescription([
+        set_gazebo_model_path,
         action_declare_arg_mode_path,
         robot_state_publisher_node,
         launch_gazebo,
@@ -64,12 +99,7 @@ def generate_launch_description():
         launch.actions.RegisterEventHandler(
             event_handler=launch.event_handlers.OnProcessExit(
                 target_action=spawn_entity_node,
-                on_exit=[load_joint_state_controller],)
+                on_exit=[load_controllers_after_timeout],)
             ),
-        # 事件动作，load_fishbot_diff_drive_controller
-        launch.actions.RegisterEventHandler(
-        event_handler=launch.event_handlers.OnProcessExit(
-            target_action=load_joint_state_controller,
-            on_exit=[load_fishbot_diff_drive_controller],)
-            ),
+        
     ])
