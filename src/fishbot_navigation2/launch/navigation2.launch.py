@@ -19,7 +19,7 @@ def generate_launch_description():
     map_yaml_path = launch.substitutions.LaunchConfiguration(
         'map', default=os.path.join(get_package_share_directory('fishbot_navigation2'),
     'maps',
-    'room.yaml'))
+    'map.yaml'))
     nav2_param_path = launch.substitutions.LaunchConfiguration(
         'params_file', default=os.path.join(fishbot_navigation2_dir, 'config', 'nav2_params.yaml'))
 
@@ -39,7 +39,9 @@ def generate_launch_description():
             launch_arguments={
                 'map': map_yaml_path,
                 'use_sim_time': use_sim_time,
-                'params_file': nav2_param_path}.items(),
+                'params_file': nav2_param_path,
+                'autostart': 'true',
+                }.items(),
         ),
         launch_ros.actions.Node(
             package='rviz2',
